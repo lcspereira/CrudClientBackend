@@ -1,0 +1,6 @@
+flask
+sqlalchemy
+alembic
+flask-sqlalchemy
+flask-migrate
+flask-restx
