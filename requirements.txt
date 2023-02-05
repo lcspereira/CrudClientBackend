@@ -4,3 +4,6 @@ alembic
 flask-sqlalchemy
 flask-migrate
 flask-restx
+pytest
+pytest-flask
+psycopg2
