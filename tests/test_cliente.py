@@ -1,5 +1,6 @@
 import pytest
 from app import app
+from dateutil import parser
 
 client = app.test_client()
 
@@ -13,7 +14,7 @@ def test_cliente(cliente_data, teardown):
     assert data["id"]
     assert data["nome"] == cliente_data["nome"]
     assert data["cpf"] == cliente_data["cpf"]
-    #assert data["data_nasc"] == cliente_data["data_nasc"]
+    assert data["data_nasc"] == cliente_data["data_nasc"].strftime('%FT%T')
     assert data["endereco"] == cliente_data["endereco"]
 
     id_cliente = data["id"]
