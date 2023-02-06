@@ -11,7 +11,7 @@ item = api.model(
     {
         "id": fields.Integer(readonly=True, description="ID do item"),
         "nome": fields.String(required=True, description="Nome do item"),
-        "cliente_id": fields.Integer(required=True, description="ID do cliente")
+        "cliente_id": fields.Integer(required=True, description="ID do cliente"),
     },
 )
 
@@ -33,6 +33,15 @@ class ItemListResource(Resource):
         db.session.add(item)
         db.session.commit()
         return item, 201
+
+
+@ns.route("/cliente/<int:id>")
+class ItemListByClienteResource(Resource):
+    @ns.doc("list_item_by_cliente")
+    @ns.marshal_list_with(item)
+    def get(self, id):
+        """Lista de items por cliente"""
+        return [item for item in db.session.query(Item).filter(Item.cliente_id == id)]
 
 
 @ns.route("/<int:id>")
@@ -57,8 +66,8 @@ class ItemResource(Resource):
     def put(self, id):
         """Atualiza item"""
         item = db.get_or_404(Item, id)
-        item.nome = api.payload['nome']
-        item.cliente_id = api.payload['cliente_id']
+        item.nome = api.payload["nome"]
+        item.cliente_id = api.payload["cliente_id"]
         db.session.commit()
-        
+
         return item
