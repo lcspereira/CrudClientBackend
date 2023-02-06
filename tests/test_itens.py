@@ -5,11 +5,8 @@ client = app.test_client()
 
 
 def test_item(db_cliente, item_data, teardown):
-
-
-
     create_item_data = item_data
-    create_item_data['cliente_id'] = db_cliente.id
+    create_item_data["cliente_id"] = db_cliente.id
     response = client.post("/itens/", json=create_item_data)
 
     assert response.status_code == 201
@@ -42,7 +39,15 @@ def test_item(db_cliente, item_data, teardown):
     assert data["nome"] == upd_item_data["nome"]
     assert data["cliente_id"] == upd_item_data["cliente_id"]
 
-    response = client.delete(f"/itens/{data['id']}")
+    response = client.get(f"/itens/cliente/{db_cliente.id}")
+    assert response.status_code == 200
+    print(response.json)
+    assert len(response.json) == 1
+    data = response.json[0]
 
+    assert data["id"] == id_item
+    assert data["nome"] == upd_item_data["nome"]
+    assert data["cliente_id"] == upd_item_data["cliente_id"]
+
+    response = client.delete(f"/itens/{id_item}")
     assert response.status_code == 204
-
