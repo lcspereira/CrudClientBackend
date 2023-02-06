@@ -1,10 +1,9 @@
-from flask_restx import Api, fields, Resource
+from flask_restx import fields, Resource
 from models import db, Cliente
+from . import api
 
 from datetime import datetime
 from email.utils import parsedate_to_datetime
-
-api = Api()
 
 ns = api.namespace("clientes", description="API CRUD Clientes")
 
@@ -35,7 +34,6 @@ class ClienteListResource(Resource):
     @ns.marshal_with(cliente, code=201)
     def post(self):
         """Cadastro de cliente"""
-        print(api.payload)
         cliente = Cliente(**api.payload)
         cliente.data_nasc = parsedate_to_datetime(api.payload["data_nasc"])
         db.session.add(cliente)
@@ -70,4 +68,5 @@ class ClienteResource(Resource):
         cliente.data_nasc = parsedate_to_datetime(api.payload['data_nasc'])
         cliente.endereco = api.payload['endereco']
         
+        db.session.commit()
         return cliente

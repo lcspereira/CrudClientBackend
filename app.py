@@ -1,13 +1,16 @@
 from flask import Flask
 from flask_migrate import Migrate
 from models import db
-from api.cliente import api, ClienteListResource, ClienteResource
+from api.cliente import ClienteListResource, ClienteResource
+from api.item import ItemListResource, ItemResource
+from api import api
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql+psycopg2://postgres:crudclient@127.0.0.1:5432/crud"
 
 db.init_app(app)
 api.init_app(app)
+
 
 migrate = Migrate(app, db)
 
