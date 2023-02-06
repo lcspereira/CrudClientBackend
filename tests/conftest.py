@@ -3,6 +3,7 @@ from app import app
 from models import Cliente, Item, db
 from datetime import datetime
 from sqlalchemy import text
+from sqlalchemy.orm.exc import ObjectDeletedError
 
 
 @pytest.fixture
@@ -19,7 +20,7 @@ def cliente_data():
     return {
         "nome": "Foo Bar",
         "cpf": "12345678912",
-        "data_nasc": datetime.utcnow(),
+        "data_nasc": datetime.now(),
         "endereco": "Rua dos Pinheiros, 123, apto 101, Porto Alegre",
     }
 
@@ -31,12 +32,15 @@ def obj_cliente(cliente_data):
 
 @pytest.fixture
 def db_cliente(obj_cliente):
-    cliente = db.session.add(obj_cliente)
-    db.commit()
-    db.refresh()
-    yield cliente
-    db.session.delete(cliente)
-    db.session.commit()
+    with app.app_context():
+        db.session.add(obj_cliente)
+        db.session.commit()
+        yield obj_cliente
+        try:
+            db.session.delete(obj_cliente)
+            db.session.commit()
+        except ObjectDeletedError as ex:
+            pass
 
 
 @pytest.fixture
@@ -53,8 +57,12 @@ def obj_item(item_data, db_cliente):
 
 @pytest.fixture
 def db_item(obj_item):
-    item = db.session.add(obj_item)
-    db.session.commit()
-    yield item
-    db.session.delete(item)
-    db.session.commit()
+    with app.app_context():
+        db.session.add(obj_item)
+        db.session.commit()
+        yield obj_item
+        try:
+            db.session.delete(obj_item)
+            db.session.commit()
+        except ObjectDeletedError as ex:
+            pass
