@@ -2,9 +2,11 @@ from flask_restx import fields, Resource
 from models import db, Item
 from . import api
 from datetime import datetime
-from email.utils import parsedate_to_datetime
+from utils.message_queue import Publisher
+
 
 ns = api.namespace("itens", description="API CRUD Itens")
+publisher = Publisher("crud", "crud", "crud")
 
 item = api.model(
     "Item",
@@ -32,6 +34,7 @@ class ItemListResource(Resource):
         item = Item(**api.payload)
         db.session.add(item)
         db.session.commit()
+        publisher.publish(f"Item cadastrado: {item.id}")
         return item, 201
 
 
@@ -59,6 +62,7 @@ class ItemResource(Resource):
         item = db.get_or_404(Item, id)
         db.session.delete(item)
         db.session.commit()
+        publisher.publish(f"Item excluído: {id}")
         return "", 204
 
     @ns.expect(item)
@@ -69,5 +73,5 @@ class ItemResource(Resource):
         item.nome = api.payload["nome"]
         item.cliente_id = api.payload["cliente_id"]
         db.session.commit()
-
+        publisher.publish(f"Item atualizado: {item.id}")
         return item
