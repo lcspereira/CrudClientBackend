@@ -3,7 +3,6 @@ from models import db, Cliente
 from . import api
 
 from datetime import datetime
-from email.utils import parsedate_to_datetime
 from utils.message_queue import Publisher
 
 ns = api.namespace("clientes", description="API CRUD Clientes")
@@ -37,10 +36,12 @@ class ClienteListResource(Resource):
     def post(self):
         """Cadastro de cliente"""
         cliente = Cliente(**api.payload)
-        cliente.data_nasc = parsedate_to_datetime(api.payload["data_nasc"])
+        cliente.data_nasc = api.payload["data_nasc"]
         db.session.add(cliente)
         db.session.commit()
+        publisher.connect()
         publisher.publish(f"Cliente cadastrado: {cliente.id}")
+        publisher.disconnect()
         return cliente, 201
 
 
@@ -59,7 +60,9 @@ class ClienteResource(Resource):
         cliente = db.get_or_404(Cliente, id)
         db.session.delete(cliente)
         db.session.commit()
+        publisher.connect()
         publisher.publish(f"Cliente excluído: {id}")
+        publisher.disconnect()
         return "", 204
 
     @ns.expect(cliente)
@@ -69,9 +72,11 @@ class ClienteResource(Resource):
         cliente = db.get_or_404(Cliente, id)
         cliente.nome = api.payload["nome"]
         cliente.cpf = api.payload["cpf"]
-        cliente.data_nasc = parsedate_to_datetime(api.payload["data_nasc"])
+        cliente.data_nasc = api.payload["data_nasc"]
         cliente.endereco = api.payload["endereco"]
 
         db.session.commit()
+        publisher.connect()
         publisher.publish(f"Cliente atualizado: {cliente.id}")
+        publisher.disconnect()
         return cliente

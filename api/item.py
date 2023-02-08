@@ -34,7 +34,9 @@ class ItemListResource(Resource):
         item = Item(**api.payload)
         db.session.add(item)
         db.session.commit()
-        publisher.publish(f"Item cadastrado: {item.id}")
+        publisher.connect()
+        publisher.publish(f"Item cadastrado: {id}")
+        publisher.disconnect()
         return item, 201
 
 
@@ -62,7 +64,9 @@ class ItemResource(Resource):
         item = db.get_or_404(Item, id)
         db.session.delete(item)
         db.session.commit()
+        publisher.connect()
         publisher.publish(f"Item excluído: {id}")
+        publisher.disconnect()
         return "", 204
 
     @ns.expect(item)
@@ -73,5 +77,7 @@ class ItemResource(Resource):
         item.nome = api.payload["nome"]
         item.cliente_id = api.payload["cliente_id"]
         db.session.commit()
+        publisher.connect()
         publisher.publish(f"Item atualizado: {item.id}")
+        publisher.disconnect()
         return item

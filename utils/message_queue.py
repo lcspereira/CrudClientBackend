@@ -1,8 +1,9 @@
 import pika
+import os
 
 
 class MessageQueueBase(object):
-    url: pika.URLParameters = pika.URLParameters("amqp://localhost:5672/")
+    url: pika.URLParameters
     conn: pika.BlockingConnection
     channel: pika.adapters.blocking_connection.BlockingChannel
     exchange: str
@@ -10,14 +11,21 @@ class MessageQueueBase(object):
     routing_key: str
 
     def __init__(self, exchange: str, queue: str, routing_key: str) -> None:
-        self.conn = pika.BlockingConnection(self.url)
         self.exchange = exchange
         self.queue = queue
         self.routing_key = routing_key
+
+    def connect(self):
+        self.conn = pika.BlockingConnection(
+            pika.ConnectionParameters(host=os.getenv("CRUD_RABBITMQ_ADDR"))
+        )
         self.channel = self.conn.channel()
         self.channel.queue_declare(self.queue, durable=False, auto_delete=True)
         self.channel.exchange_declare(self.exchange, durable=False, auto_delete=True)
         self.channel.queue_bind(self.queue, self.exchange)
+
+    def disconnect(self):
+        self.channel.close()
 
 
 class Publisher(MessageQueueBase):
@@ -41,10 +49,11 @@ class Consumer(MessageQueueBase):
         Args:
             callback (function): Função de processamento de mensagem
         """
+        self.connect()
         self.channel.basic_consume("crud", callback)
         try:
             self.channel.start_consuming()
         except KeyboardInterrupt as ex:
             self.channel.stop_consuming()
         finally:
-            self.channel.close()
+            self.disconnect()
