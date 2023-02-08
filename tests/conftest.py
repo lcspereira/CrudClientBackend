@@ -20,7 +20,7 @@ def cliente_data():
     return {
         "nome": "Foo Bar",
         "cpf": "12345678912",
-        "data_nasc": datetime.now(),
+        "data_nasc": "2023-02-07T21:34:53.256Z",
         "endereco": "Rua dos Pinheiros, 123, apto 101, Porto Alegre",
     }
 
