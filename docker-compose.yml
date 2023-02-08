@@ -3,13 +3,61 @@ version: '3.1'
 
 services:
 
+  _build:
+    image: python:3.11
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.python
+    environment:
+      - PYTHONPATH=.
+      - CRUD_DB_URL=postgresql+psycopg2://postgres:crudclient@db:5432/crud
+      - CRUD_RABBITMQ_ADDR=rabbitmq
+    volumes:
+      - ./:/app
+    command: [ "echo", "Build finalizada" ]
+    
+
+  web:
+    container_name: "web"
+    image: python:3.11
+    depends_on:
+      - _build
+    restart: on-failure
+    environment:
+      - PYTHONPATH=.
+      - CRUD_DB_URL=postgresql+psycopg2://postgres:crudclient@db:5432/crud
+      - CRUD_RABBITMQ_ADDR=rabbitmq
+    ports:
+      - 5000:5000
+    volumes:
+      - ./:/app
+    command: [ "python", "app.py" ]
+    
+
+  watcher:
+    container_name: "watcher"
+    image: python:3.11
+    depends_on:
+      - _build
+      - rabbitmq
+    restart: on-failure
+    environment:
+      - PYTHONPATH=.
+      - CRUD_DB_URL=postgresql+psycopg2://postgres:crudclient@db:5432/crud
+      - CRUD_RABBITMQ_ADDR=rabbitmq
+    volumes:
+      - ./:/app
+    command: [ "python", "./bin/watcher.py" ]
+    
   db:
     image: postgres
-    restart: always
+    restart: on-failure
     ports:
       - 5432:5432
     environment:
-      POSTGRES_PASSWORD: crudclient
+      - POSTGRES_PASSWORD=crudclient
+      - POSTGRES_DB=crud
+    
 
   adminer:
     image: adminer
@@ -19,16 +67,12 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.8-management-alpine
+    restart: on-failure
     container_name: 'rabbitmq'
     ports:
-        - 5672:5672
-        - 15672:15672
+      - 5672:5672
+      - 15672:15672
     volumes:
-        - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
-        - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
-    networks:
-        - rabbitmq_go_net
-
-networks:
-  rabbitmq_go_net:
-    driver: bridge
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    

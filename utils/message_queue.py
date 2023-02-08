@@ -1,8 +1,9 @@
 import pika
+import os
 
 
 class MessageQueueBase(object):
-    url: pika.URLParameters = pika.URLParameters("amqp://localhost:5672/")
+    url: pika.URLParameters
     conn: pika.BlockingConnection
     channel: pika.adapters.blocking_connection.BlockingChannel
     exchange: str
@@ -10,7 +11,9 @@ class MessageQueueBase(object):
     routing_key: str
 
     def __init__(self, exchange: str, queue: str, routing_key: str) -> None:
-        self.conn = pika.BlockingConnection(self.url)
+        self.conn = pika.BlockingConnection(
+            pika.ConnectionParameters(host=os.getenv("CRUD_RABBITMQ_ADDR"))
+        )
         self.exchange = exchange
         self.queue = queue
         self.routing_key = routing_key

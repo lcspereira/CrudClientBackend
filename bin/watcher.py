@@ -12,5 +12,7 @@ def on_message(channel, method_frame, header_frame, body):
 
 
 if __name__ == "__main__":
+    print("Iniciando monitor de eventos...")
+    time.sleep(60)
     consumer = Consumer("crud", "crud", "crud")
     consumer.consume(on_message)
